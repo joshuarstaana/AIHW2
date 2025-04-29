@@ -4,18 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat UI</title>
-    <link rel="stylesheet" href="public/css/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .typing-indicator::after {
+            content: '';
+            animation: typing 1.5s infinite;
+        }
+        @keyframes typing {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        .message-content {
+            white-space: pre-wrap;
+        }
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+    </style>
 </head>
-<body>
-    <div id="chat-container">
-        <div id="chat-window">
-            <div id="messages"></div>
+<body class="bg-[#343541] min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="border-b border-gray-600 bg-[#343541] py-2 px-4 fixed top-0 w-full z-10">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <h1 class="text-white font-semibold">Chat UI</h1>
+            <div class="h-8 w-8 rounded-full bg-[#19c37d] flex items-center justify-center text-white font-medium">
+                JS
+            </div>
         </div>
-        <div id="input-container">
-            <input type="text" id="user-input" placeholder="Type your message here...">
-            <button id="send-button">Send</button>
+    </header>
+
+    <!-- Main chat container -->
+    <main class="flex-1 w-full max-w-3xl mx-auto pt-16 pb-32">
+        <div id="messages" class="flex flex-col"></div>
+    </main>
+
+    <!-- Input container -->
+    <div class="fixed bottom-0 w-full bg-[#343541] border-t border-gray-600 py-4">
+        <div class="max-w-3xl mx-auto px-4">
+            <form id="chat-form" class="relative">
+                <input 
+                    type="text" 
+                    id="user-input" 
+                    placeholder="Send a message..." 
+                    class="w-full bg-[#40414f] text-white rounded-xl py-3 pl-4 pr-14 focus:outline-none focus:ring-2 focus:ring-[#19c37d] placeholder-gray-400"
+                >
+                <button 
+                    id="send-button" 
+                    type="submit"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-[#19c37d] transition-colors disabled:opacity-40"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                    </svg>
+                </button>
+            </form>
         </div>
     </div>
+
     <script src="public/js/script.js"></script>
 </body>
 </html>

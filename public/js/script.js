@@ -1,27 +1,106 @@
 // JavaScript for basic chat UI interactivity
-const sendButton = document.getElementById('send-button');
-const userInput = document.getElementById('user-input');
-const messages = document.getElementById('messages');
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const messages = document.getElementById('messages');
+    const sendButton = document.getElementById('send-button');
 
-sendButton.addEventListener('click', () => {
-    const userMessage = userInput.value.trim();
-    if (userMessage) {
-        const messageElement = document.createElement('div');
-        messageElement.textContent = `You: ${userMessage}`;
-        messages.appendChild(messageElement);
-        userInput.value = '';
-        messages.scrollTop = messages.scrollHeight;
+    let isTyping = false;
 
-        // Placeholder for AI response
-        const aiMessage = document.createElement('div');
-        aiMessage.textContent = 'AI: This is a placeholder response.';
-        messages.appendChild(aiMessage);
-        messages.scrollTop = messages.scrollHeight;
+    function createMessageThread(message, isUser = true) {
+        const thread = document.createElement('div');
+        thread.className = `py-6 ${isUser ? 'bg-[#343541]' : 'bg-[#444654]'}`;
+        
+        const container = document.createElement('div');
+        container.className = 'max-w-3xl mx-auto px-4 flex gap-4 items-start';
+        
+        // Avatar
+        const avatar = document.createElement('div');
+        avatar.className = `w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ${isUser ? 'bg-[#19c37d]' : 'bg-[#8e8ea0]'}`;
+        avatar.textContent = isUser ? 'U' : 'A';
+        
+        // Message content
+        const content = document.createElement('div');
+        content.className = 'flex-1 message-content text-white';
+        content.textContent = message;
+        
+        container.appendChild(avatar);
+        container.appendChild(content);
+        thread.appendChild(container);
+        
+        return thread;
     }
-});
 
-userInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-        sendButton.click();
+    function addTypingIndicator() {
+        const thread = document.createElement('div');
+        thread.className = 'py-6 bg-[#444654]';
+        thread.id = 'typing-indicator';
+        
+        const container = document.createElement('div');
+        container.className = 'max-w-3xl mx-auto px-4 flex gap-4 items-start';
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'w-8 h-8 rounded-full flex items-center justify-center text-white text-sm bg-[#8e8ea0]';
+        avatar.textContent = 'A';
+        
+        const content = document.createElement('div');
+        content.className = 'flex-1 text-white typing-indicator';
+        content.textContent = 'AI is typing';
+        
+        container.appendChild(avatar);
+        container.appendChild(content);
+        thread.appendChild(container);
+        
+        return thread;
     }
+
+    function scrollToBottom() {
+        window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+
+    function simulateTyping(message) {
+        if (isTyping) return;
+        isTyping = true;
+        
+        messages.appendChild(addTypingIndicator());
+        scrollToBottom();
+
+        setTimeout(() => {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            messages.appendChild(createMessageThread(message, false));
+            scrollToBottom();
+            isTyping = false;
+        }, 1500);
+    }
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        
+        if (message && !isTyping) {
+            messages.appendChild(createMessageThread(message, true));
+            userInput.value = '';
+            scrollToBottom();
+
+            // Simulate AI response
+            simulateTyping('Thank you for your message. This is a simulated response from the AI assistant.');
+        }
+    });
+
+    // Enable/disable send button based on input
+    userInput.addEventListener('input', () => {
+        sendButton.disabled = userInput.value.trim() === '';
+        sendButton.className = `absolute right-2 top-1/2 -translate-y-1/2 p-2 transition-colors ${
+            userInput.value.trim() === '' ? 'text-gray-600' : 'text-gray-400 hover:text-[#19c37d]'
+        }`;
+    });
+
+    // Initial button state
+    sendButton.disabled = true;
 });
