@@ -1,6 +1,12 @@
 // JavaScript for basic chat UI interactivity
 document.addEventListener('DOMContentLoaded', () => {
-    const socket = io();
+    const socket = io({
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5
+    });
+    
     const form = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const messages = document.getElementById('messages');
@@ -62,29 +68,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Load conversation history
+    // Load chat history
     socket.on('load history', (history) => {
-        messages.innerHTML = ''; // Clear any existing messages
-        history.forEach(msg => {
-            messages.appendChild(createMessageThread(msg.content, msg.role === 'user'));
-        });
-        scrollToBottom();
+        console.log('Received chat history:', history);
+        messages.innerHTML = '';
+        if (history && history.length > 0) {
+            history.forEach(msg => {
+                messages.appendChild(createMessageThread(msg.content, msg.role === 'user'));
+            });
+            // Store history in localStorage as backup
+            localStorage.setItem('chatHistory', JSON.stringify(history));
+            scrollToBottom();
+        }
     });
 
     socket.on('connect', () => {
         console.log('Connected to server');
-    });
-
-    socket.on('typing', (typing) => {
-        if (typing && !document.getElementById('typing-indicator')) {
-            messages.appendChild(addTypingIndicator());
-            scrollToBottom();
-        } else if (!typing) {
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
+        // Request history from server
+        socket.emit('request history');
+        
+        // If server doesn't respond with history, try loading from localStorage
+        setTimeout(() => {
+            if (messages.children.length === 0) {
+                const savedHistory = localStorage.getItem('chatHistory');
+                if (savedHistory) {
+                    const history = JSON.parse(savedHistory);
+                    history.forEach(msg => {
+                        messages.appendChild(createMessageThread(msg.content, msg.role === 'user'));
+                    });
+                    scrollToBottom();
+                }
             }
-        }
+        }, 1000);
     });
 
     socket.on('ai response', (data) => {
@@ -93,7 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typingIndicator) {
             typingIndicator.remove();
         }
+        
         messages.appendChild(createMessageThread(data.message, false));
+        
+        // Update localStorage with new message
+        const savedHistory = localStorage.getItem('chatHistory');
+        const history = savedHistory ? JSON.parse(savedHistory) : [];
+        history.push({ role: 'assistant', content: data.message });
+        localStorage.setItem('chatHistory', JSON.stringify(history));
+        
         scrollToBottom();
         isTyping = false;
         userInput.disabled = false;
@@ -105,15 +128,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const message = userInput.value.trim();
         
         if (message && !isTyping) {
-            // Disable input while waiting for response
             userInput.disabled = true;
             sendButton.disabled = true;
             isTyping = true;
 
+            // Add message to UI and localStorage
             messages.appendChild(createMessageThread(message, true));
+            const savedHistory = localStorage.getItem('chatHistory');
+            const history = savedHistory ? JSON.parse(savedHistory) : [];
+            history.push({ role: 'user', content: message });
+            localStorage.setItem('chatHistory', JSON.stringify(history));
+
             socket.emit('chat message', message);
             userInput.value = '';
             scrollToBottom();
+        }
+    });
+
+    socket.on('typing', (typing) => {
+        if (typing && !document.getElementById('typing-indicator')) {
+            messages.appendChild(addTypingIndicator());
+            scrollToBottom();
+        } else if (!typing) {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
         }
     });
 
