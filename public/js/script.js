@@ -62,12 +62,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Socket.io event handlers
+    // Load conversation history
+    socket.on('load history', (history) => {
+        messages.innerHTML = ''; // Clear any existing messages
+        history.forEach(msg => {
+            messages.appendChild(createMessageThread(msg.content, msg.role === 'user'));
+        });
+        scrollToBottom();
+    });
+
     socket.on('connect', () => {
         console.log('Connected to server');
     });
 
+    socket.on('typing', (typing) => {
+        if (typing && !document.getElementById('typing-indicator')) {
+            messages.appendChild(addTypingIndicator());
+            scrollToBottom();
+        } else if (!typing) {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+    });
+
     socket.on('ai response', (data) => {
+        console.log('Received AI response:', data);
         const typingIndicator = document.getElementById('typing-indicator');
         if (typingIndicator) {
             typingIndicator.remove();
@@ -75,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
         messages.appendChild(createMessageThread(data.message, false));
         scrollToBottom();
         isTyping = false;
+        userInput.disabled = false;
+        sendButton.disabled = false;
     });
 
     form.addEventListener('submit', (e) => {
@@ -82,25 +105,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const message = userInput.value.trim();
         
         if (message && !isTyping) {
+            // Disable input while waiting for response
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            isTyping = true;
+
             messages.appendChild(createMessageThread(message, true));
             socket.emit('chat message', message);
             userInput.value = '';
             scrollToBottom();
-
-            // Show typing indicator
-            if (!isTyping) {
-                isTyping = true;
-                messages.appendChild(addTypingIndicator());
-                scrollToBottom();
-            }
         }
     });
 
     // Enable/disable send button based on input
     userInput.addEventListener('input', () => {
-        sendButton.disabled = userInput.value.trim() === '';
+        const isEmpty = userInput.value.trim() === '';
+        sendButton.disabled = isEmpty;
         sendButton.className = `absolute right-2 top-1/2 -translate-y-1/2 p-2 transition-colors ${
-            userInput.value.trim() === '' ? 'text-gray-600' : 'text-gray-400 hover:text-[#19c37d]'
+            isEmpty ? 'text-gray-600' : 'text-gray-400 hover:text-[#19c37d]'
         }`;
     });
 
