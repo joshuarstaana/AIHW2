@@ -1,5 +1,6 @@
 // JavaScript for basic chat UI interactivity
 document.addEventListener('DOMContentLoaded', () => {
+    const socket = io();
     const form = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const messages = document.getElementById('messages');
@@ -61,23 +62,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function simulateTyping(message) {
-        if (isTyping) return;
-        isTyping = true;
-        
-        messages.appendChild(addTypingIndicator());
-        scrollToBottom();
+    // Socket.io event handlers
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
 
-        setTimeout(() => {
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-            messages.appendChild(createMessageThread(message, false));
-            scrollToBottom();
-            isTyping = false;
-        }, 1500);
-    }
+    socket.on('ai response', (data) => {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+        messages.appendChild(createMessageThread(data.message, false));
+        scrollToBottom();
+        isTyping = false;
+    });
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -85,11 +83,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (message && !isTyping) {
             messages.appendChild(createMessageThread(message, true));
+            socket.emit('chat message', message);
             userInput.value = '';
             scrollToBottom();
 
-            // Simulate AI response
-            simulateTyping('Thank you for your message. This is a simulated response from the AI assistant.');
+            // Show typing indicator
+            if (!isTyping) {
+                isTyping = true;
+                messages.appendChild(addTypingIndicator());
+                scrollToBottom();
+            }
         }
     });
 
