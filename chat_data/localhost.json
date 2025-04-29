@@ -1,0 +1,26 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful AI assistant. Provide clear, concise, and accurate responses."
+  },
+  {
+    "role": "user",
+    "content": "What is 1+1"
+  },
+  {
+    "role": "assistant",
+    "content": "1 + 1 equals 2.",
+    "refusal": null,
+    "annotations": []
+  },
+  {
+    "role": "user",
+    "content": "2+2?"
+  },
+  {
+    "role": "assistant",
+    "content": "2 + 2 equals 4.",
+    "refusal": null,
+    "annotations": []
+  }
+]
