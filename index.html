@@ -44,11 +44,16 @@
     <!-- Input container -->
     <div class="fixed bottom-0 w-full bg-[#343541] border-t border-gray-600 py-4">
         <div class="max-w-3xl mx-auto px-4">
-            <form id="chat-form" class="relative">
+            <form id="chat-form" class="relative" autocomplete="off" novalidate>
                 <input 
                     type="text" 
                     id="user-input" 
                     placeholder="Send a message..." 
+                    autocomplete="off"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                    data-form-type="other"
                     class="w-full bg-[#40414f] text-white rounded-xl py-3 pl-4 pr-14 focus:outline-none focus:ring-2 focus:ring-[#19c37d] placeholder-gray-400"
                 >
                 <button 
